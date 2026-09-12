@@ -3,6 +3,16 @@
 Captured from a real OMP Desktop 0.9.2 session (engine omp 18.1.17) on Windows 10
 IoT Enterprise LTSC 2021 (19044), native Windows, ConPTY.
 
+## Capture geometry: 133 x 42
+
+**Replay at 133x42, not 120x32.** The proxy never logged the ConPTY size, but the
+stream records it: the engine pads rows to the terminal width and 5,359 physical
+lines are exactly 133 columns, and the highest row addressed is 42 (310 of 319
+absolute-positioning writes land in rows 37-42, the pinned bottom chrome).
+
+At 120 columns every 133-wide row — including the status row — wraps onto a second
+physical row and manufactures apparent duplicates. See `results.md`.
+
 ## Contents
 
 | file | what it is |
@@ -23,13 +33,12 @@ The capture embeds the reporter's session content, so all printable text was
 replaced with `x` padded to the **same rendered width**, measured by writing each
 text run through `@xterm/headless` itself (a per-codepoint width table gets
 grapheme clusters wrong). Every escape sequence, control byte and CR/LF is copied
-verbatim.
+verbatim. OSC 8 hyperlink URIs are dropped, keeping the `id=` parameter and the
+envelope.
 
-**Known deviation:** replaying the scrubbed file yields **20,349** scrollback rows
-against **20,346** for the original — 3 rows, 0.015%. The escape-sequence census is
-identical and the pattern under investigation is unaffected, but this is not a
-byte-exact reproduction. The session JSONL is available on request if you want an
-exact replay instead.
+**Verified equivalent at the true geometry:** replaying the scrubbed capture at
+133x42 yields the same state as the original — 19,744 scrollback rows, 19,786 total,
+0-row deviation.
 
 ## What the original shows
 
@@ -40,9 +49,9 @@ exact replay instead.
 11317  EL   ESC[K
 ```
 
-Emulated at 120x32: **20,346 scrollback rows, 202 status-line rows, 65 runs of
-adjacent identical status rows** (133 rows inside runs, longest 3), with each
-frozen elapsed value repeated 8-30x.
+Emulated at 133x42: **19,744 scrollback rows and 28 status-line rows**, with 6 runs
+of adjacent identical status rows (20 rows inside runs, longest 5). A status row
+should appear in scrollback essentially never.
 
 ## Capturing this yourself
 
@@ -68,12 +77,13 @@ process.stdin.on('data', (d) => child.write(d));
 ```
 
 `harness/omp-tee.js` is the full version, including resize forwarding and the
-cursor-query answers.
+cursor-query answers. Log the initial `cols x rows` — that is the one piece of
+provenance worth not having to reconstruct afterwards.
 
 ## How to replay
 
 ```bash
 npm install @xterm/headless
 node analysis/forensics.js capture-scrubbed.bin      # control-sequence census
-node analysis/emulate.js   capture-scrubbed.bin 120 32
+node analysis/emulate.js   capture-scrubbed.bin 133 42
 ```
