@@ -17,6 +17,7 @@ physical row and manufactures apparent duplicates. See `results.md`.
 
 | file | what it is |
 | --- | --- |
+| `session-01a091d2-a1fe-7599-a968-22846fd4ee62.jsonl` | **The reporter's actual session transcript** (5.5 MB, 2,397 records). This is the input that reproduces the bug — the capture below is only its output. |
 | `capture-scrubbed.bin` | The raw bytes the engine wrote to the PTY, ~26 s of activity during the runaway scroll (2.98 MB). **Text scrubbed — see below.** |
 | `capture.events.log` | Per-write timestamps and byte counts from the original capture (write-rate timeline). |
 | `harness/omp-tee.js` | The PTY proxy used to capture it. |
